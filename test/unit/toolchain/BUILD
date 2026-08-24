@@ -13,8 +13,20 @@
 # limitations under the License.
 
 load(
+    "@rules_cc//cc:defs.bzl",
+    "cc_library",
+)
+load(
+    "//:defs.bzl",
+    "codechecker_test",
+)
+load(
     "//src:codechecker_toolchain.bzl",
     "codechecker_toolchain",
+)
+load(
+    "//test/unit/toolchain:per_target_toolchain_test.bzl",
+    "per_target_toolchain_test_suite",
 )
 load(
     "//test/unit/toolchain:toolchain_runfiles_test.bzl",
@@ -40,7 +52,23 @@ sh_binary(
     srcs = ["mock_clang_tidy.sh"],
 )
 
-# --- Mock toolchain ---
+# Second set of mock tools (to test multiple toolchains).
+sh_binary(
+    name = "mock_codechecker_2",
+    srcs = ["mock_codechecker_2.sh"],
+)
+
+sh_binary(
+    name = "mock_clang_2",
+    srcs = ["mock_clang_2.sh"],
+)
+
+sh_binary(
+    name = "mock_clang_tidy_2",
+    srcs = ["mock_clang_tidy_2.sh"],
+)
+
+# --- Mock toolchains ---
 
 codechecker_toolchain(
     name = "runfiles_mock_toolchain",
@@ -49,6 +77,58 @@ codechecker_toolchain(
     codechecker = ":mock_codechecker",
 )
 
+codechecker_toolchain(
+    name = "runfiles_mock_toolchain_2",
+    clang_tidy = ":mock_clang_tidy_2",
+    clangsa = ":mock_clang_2",
+    codechecker = ":mock_codechecker_2",
+)
+
 # --- Tests ---
 
 runfiles_test_suite(name = "runfiles")
+
+# --- Per-target toolchain selection tests ---
+# TODO(per-target-toolchain): When the `toolchain` attribute is added,
+# uncomment the `toolchain` lines below and flip the assertions in
+# per_target_toolchain_test.bzl (change asserts.false to asserts.true).
+
+cc_library(
+    name = "toolchain_test_lib",
+    srcs = ["toolchain_test.cpp"],
+    tags = ["manual"],
+)
+
+codechecker_test(
+    name = "per_target_monolithic_subject",
+    tags = ["manual"],
+    targets = [":toolchain_test_lib"],
+    # toolchain = ":runfiles_mock_toolchain",
+)
+
+codechecker_test(
+    name = "per_target_per_file_subject",
+    per_file = True,
+    tags = ["manual"],
+    targets = [":toolchain_test_lib"],
+    # toolchain = ":runfiles_mock_toolchain",
+)
+
+per_target_toolchain_test_suite(name = "per_target")
+
+codechecker_test(
+    name = "per_target_2_monolithic_subject",
+    tags = ["manual"],
+    targets = [":toolchain_test_lib"],
+    # toolchain = ":runfiles_mock_toolchain_2",
+)
+
+codechecker_test(
+    name = "per_target_2_per_file_subject",
+    per_file = True,
+    tags = ["manual"],
+    targets = [":toolchain_test_lib"],
+    # toolchain = ":runfiles_mock_toolchain_2",
+)
+
+per_target_toolchain_test_suite(name = "per_target_2")
