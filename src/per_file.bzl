@@ -187,7 +187,10 @@ def _per_file_impl(ctx):
         target_file = ctx.executable._per_file_script,
     )
 
-    info = ctx.toolchains["//:toolchain_type"].codecheckerinfo
+    if ctx.attr.toolchain:
+        info = ctx.attr.toolchain[platform_common.ToolchainInfo].codecheckerinfo
+    else:
+        info = ctx.toolchains["//:toolchain_type"].codecheckerinfo
     for target in ctx.attr.targets:
         if not CcInfo in target:
             continue
@@ -270,6 +273,12 @@ per_file_test = rule(
                 compile_commands_aspect,
             ],
             doc = "List of compilable targets which should be checked.",
+        ),
+        "toolchain": attr.label(
+            default = None,
+            doc = "Optional toolchain() target. " +
+                  "When set, tools from this target are used instead of " +
+                  "Bazel's toolchain resolution.",
         ),
         "_per_file_script": attr.label(
             allow_files = True,
