@@ -17,25 +17,13 @@ Tests regex resolution from remote executor absolute path
 to local relative paths
 """
 
-import os
 import unittest
 from typing import Dict
-from common.base import TestBase
 from src.codechecker_script import fix_path_with_regex
 
 
-class TestPathResolve(TestBase):
+class TestPathResolve(unittest.TestCase):
     """Test regex resolution of remote execution paths"""
-
-    # Set working directory
-    __test_path__ = os.path.dirname(os.path.abspath(__file__))
-    BAZEL_BIN_DIR = os.path.join(
-        "../../..", "bazel-bin", "test", "unit", "plist_res"
-    )
-    BAZEL_TESTLOGS_DIR = os.path.join(
-        "../../..", "bazel-testlogs", "test", "unit", "plist_res"
-    )
-    dir = os.path.dirname(os.path.abspath(__file__)) + "/tmp"
 
     def test_remote_worker_path_resolution(self):
         """
